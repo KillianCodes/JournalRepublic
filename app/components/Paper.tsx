@@ -23,8 +23,8 @@ import Toolbar from '@yoopta/toolbar';
 import LinkTool, { DefaultLinkToolRender } from '@yoopta/link-tool';
 
 type PaperProps = {
-  initialContent: string;
-  onChange: (val: string) => void;
+  initialContent: any;
+  onChange: (val: any) => void;
   placeholder?: string;
 };
 
@@ -53,7 +53,7 @@ const MARKS = [Bold, Italic, CodeMark, Underline, Strike, Highlight];
 export default function Paper({ initialContent, onChange, placeholder }: PaperProps) {
   const editor = useMemo(() => createYooptaEditor(), []);
   const selectionRef = useRef<HTMLDivElement | null>(null);
-  const [value, setValue] = useState<any>({});
+  const [value, setValue] = useState<any>(initialContent);
 
   const tools = {
     ActionMenu: { render: DefaultActionMenuRender, tool: ActionMenuList },
@@ -62,7 +62,10 @@ export default function Paper({ initialContent, onChange, placeholder }: PaperPr
   };
 
   return (
-    <div ref={selectionRef}>
+    <div
+      ref={selectionRef}
+      className="w-[70%] mx-auto rounded-2xl border border-gray-200 bg-white shadow-sm p-6 min-h-[600px]"
+    >
       <YooptaEditor
         editor={editor}
         plugins={plugins as any}
@@ -70,10 +73,10 @@ export default function Paper({ initialContent, onChange, placeholder }: PaperPr
         tools={tools as any}
         selectionBoxRoot={selectionRef}
         value={value}
-        placeholder={placeholder}
+        placeholder={placeholder ?? 'Start writing...'}
         onChange={(v: any) => {
           setValue(v);
-          onChange(String(v ?? ''));
+          onChange(JSON.stringify(v)); // ✅ properly save JSON string
         }}
       />
     </div>
