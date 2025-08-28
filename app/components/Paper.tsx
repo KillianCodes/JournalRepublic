@@ -76,7 +76,7 @@ export default function Paper({ initialContent, onChange, placeholder }: PaperPr
         placeholder={placeholder ?? 'Start writing...'}
         onChange={(v: any) => {
           setValue(v);
-          onChange(JSON.stringify(v)); // ✅ properly save JSON string
+          onChange(v); // ✅ pass raw object to parent
         }}
       />
     </div>

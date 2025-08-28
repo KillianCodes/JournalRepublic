@@ -20,6 +20,35 @@ interface Journal {
   entryCount: number;
 }
 
+// 🔧 Helper: extract readable preview text from Yoopta JSON
+function getEntryPreview(content: string, maxLength: number = 100): string {
+  if (!content) return 'No content yet...';
+
+  try {
+    const parsed = JSON.parse(content);
+
+    // Flatten all blocks into text
+    const text = Object.values(parsed)
+      .map((block: any) => {
+        if (Array.isArray(block)) {
+          return block
+            .map((b) =>
+              b.children?.map((c: any) => c.text || '').join(' ')
+            )
+            .join(' ');
+        }
+        return '';
+      })
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    return text.length > maxLength ? text.slice(0, maxLength) + '…' : text;
+  } catch {
+    return 'No content yet...';
+  }
+}
+
 export default function JournalWorkspace() {
   const [journal, setJournal] = useState<Journal | null>(null);
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -40,17 +69,19 @@ export default function JournalWorkspace() {
     // Load journal
     const journals = JSON.parse(localStorage.getItem('journals') || '[]');
     const currentJournal = journals.find((j: Journal) => j.id === journalId);
-    
+
     if (!currentJournal) {
       router.push('/shelf');
       return;
     }
-    
+
     setJournal(currentJournal);
 
     // Load entries for this journal
     const allEntries = JSON.parse(localStorage.getItem('entries') || '[]');
-    const journalEntries = allEntries.filter((entry: Entry) => entry.journalId === journalId);
+    const journalEntries = allEntries.filter(
+      (entry: Entry) => entry.journalId === journalId
+    );
     setEntries(journalEntries);
   }, [journalId, router]);
 
@@ -61,7 +92,7 @@ export default function JournalWorkspace() {
       title: newEntryTitle,
       content: '',
       createdAt: new Date().toISOString(),
-      journalId: journalId
+      journalId: journalId,
     };
 
     const allEntries = JSON.parse(localStorage.getItem('entries') || '[]');
@@ -70,14 +101,14 @@ export default function JournalWorkspace() {
 
     // Update journal entry count
     const journals = JSON.parse(localStorage.getItem('journals') || '[]');
-    const updatedJournals = journals.map((j: Journal) => 
+    const updatedJournals = journals.map((j: Journal) =>
       j.id === journalId ? { ...j, entryCount: j.entryCount + 1 } : j
     );
     localStorage.setItem('journals', JSON.stringify(updatedJournals));
 
     setNewEntryTitle('');
     setShowCreateForm(false);
-    
+
     // Navigate to the new entry
     router.push(`/workspace/${journalId}/${newEntry.id}`);
   };
@@ -155,7 +186,7 @@ export default function JournalWorkspace() {
                 {entry.title}
               </h3>
               <p className="text-gray-600 mb-2 line-clamp-3">
-                {entry.content || 'No content yet...'}
+                {getEntryPreview(entry.content)}
               </p>
               <p className="text-sm text-gray-500">
                 {new Date(entry.createdAt).toLocaleDateString()} at{' '}
@@ -167,7 +198,9 @@ export default function JournalWorkspace() {
 
         {entries.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No entries yet. Create your first entry to start journaling!</p>
+            <p className="text-gray-500 text-lg">
+              No entries yet. Create your first entry to start journaling!
+            </p>
           </div>
         )}
       </div>

@@ -5,8 +5,8 @@ import { useRouter, useParams } from 'next/navigation';
 import Paper from '../../../components/Paper';
 import Toolbar from '../../../components/Toolbar';
 
-export default function EntryEditor() {
-  const [content, setContent] = useState('');
+export default function EntryPage() {
+  const [content, setContent] = useState<any>(null); // keep as object
   const [loaded, setLoaded] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
@@ -35,7 +35,18 @@ export default function EntryEditor() {
       return;
     }
 
-    setContent(currentEntry.content || '');
+    // Parse string → object if needed
+    let parsedContent = {};
+    try {
+      parsedContent =
+        typeof currentEntry.content === 'string'
+          ? JSON.parse(currentEntry.content)
+          : currentEntry.content || {};
+    } catch {
+      parsedContent = {};
+    }
+
+    setContent(parsedContent);
     setLoaded(true);
   }, [journalId, entryId, router]);
 
@@ -52,7 +63,7 @@ export default function EntryEditor() {
 
       const updatedEntries = allEntries.map((e: any) =>
         e.id === entryId && e.journalId === journalId
-          ? { ...e, content, updatedAt: Date.now() }
+          ? { ...e, content: JSON.stringify(content), updatedAt: Date.now() }
           : e
       );
 
@@ -71,16 +82,16 @@ export default function EntryEditor() {
 
   return (
     <main className="w-full min-h-screen bg-gray-50 flex flex-col">
-      {/* Paper centered with margin from the top */}
-      <div className="mt-40 flex justify-center">
-        <Paper
-          initialContent={content}
-          onChange={setContent}
-          placeholder="Start writing your thoughts..."
-        />
+      <div className="mt-40 flex justify-center w-full">
+        {loaded && (
+          <Paper
+            initialContent={content}
+            onChange={setContent}
+            placeholder="Start writing your thoughts..."
+          />
+        )}
       </div>
 
-      {/* Toolbar */}
       <Toolbar editor={null} saveStatus={saveStatus} />
     </main>
   );
