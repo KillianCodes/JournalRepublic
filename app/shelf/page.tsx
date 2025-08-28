@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import JournalCard from './components/JournalCard';
+import JournalCard from '../components/JournalCard';
 
 interface Journal {
   id: string;
